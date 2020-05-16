@@ -1,0 +1,14 @@
+*.exe
+*.dll
+*.so
+*.dylib
+
+*.test
+
+*.out
+
+.glide/
+
+tmp/*
+
+keys.json
