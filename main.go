@@ -4,7 +4,10 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"flag"
+	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	"github.com/Tak1za/go-twitter/twc"
 )
@@ -16,13 +19,15 @@ type keys struct {
 
 func main() {
 	var (
-		keyFile   string
-		usersFile string
-		tweetID   string
+		keyFile    string
+		usersFile  string
+		tweetID    string
+		numWinners int
 	)
-	flag.StringVar(&keyFile, "key", "keys.json", "the file where we store consumer key and secret for twitter API")
-	flag.StringVar(&usersFile, "users", "users.csv", "the file where users who have retweeted the tweet are stored. This will be created if it does not exist")
+	flag.StringVar(&keyFile, "key", "keys.json", "The file where we store consumer key and secret for twitter API")
+	flag.StringVar(&usersFile, "users", "users.csv", "The file where users who have retweeted the tweet are stored. This will be created if it does not exist")
 	flag.StringVar(&tweetID, "tweet", "", "The ID of the tweet you wish to find the retweeters of")
+	flag.IntVar(&numWinners, "winners", 0, "The number of winners to pick for the contest")
 	flag.Parse()
 
 	keys, err := getKeysFromJson(keyFile)
@@ -36,7 +41,7 @@ func main() {
 	}
 
 	tClient := twc.GetTwitterClient(accessKeys)
-	retweets, err := tClient.GetRetweets("1261710171979513857")
+	retweets, err := tClient.GetRetweets(tweetID)
 	if err != nil {
 		panic(err)
 	}
@@ -54,6 +59,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	if numWinners == 0 {
+		return
+	}
+
+	fmt.Println("The winners are: ", pickWinners(usersFile, numWinners))
+}
+
+func pickWinners(usersFile string, num int) []string {
+	winningUsers := make([]string, 0, num)
+	users := existing(usersFile)
+
+	seed := rand.NewSource(time.Now().Unix())
+	random := rand.New(seed).Perm(len(users))[:num]
+	for _, j := range random {
+		winningUsers = append(winningUsers, users[j])
+	}
+	return winningUsers
 }
 
 func writeUsers(usersFile string, users []string) error {
