@@ -41,7 +41,10 @@ func main() {
 		Secret: keys.Secret,
 	}
 
-	tClient := twc.GetTwitterClient(accessKeys)
+	tClient, err := twc.GetTwitterClient(accessKeys)
+	if err != nil {
+		panic(err)
+	}
 	if tweetID != "" {
 		retweets, err := tClient.GetRetweets(tweetID)
 		if err != nil {

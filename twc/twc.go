@@ -25,13 +25,16 @@ type AccessKeys struct {
 }
 
 //GetTwitterClient to start making requests
-func GetTwitterClient(keys AccessKeys) *TWApi {
-	accessToken := getToken(keys)
+func GetTwitterClient(keys AccessKeys) (*TWApi, error) {
+	accessToken, err := getToken(keys)
+	if err != nil {
+		return nil, err
+	}
 	var conf oauth2.Config
 	tClient := conf.Client(context.Background(), &accessToken)
 	return &TWApi{
 		HttpClient: tClient,
-	}
+	}, nil
 }
 
 func (api TWApi) getRequest(url string, data interface{}) error {
@@ -60,10 +63,10 @@ func decodeResponse(item io.ReadCloser, data interface{}) error {
 	return nil
 }
 
-func getToken(keys AccessKeys) oauth2.Token {
+func getToken(keys AccessKeys) (oauth2.Token, error) {
 	req, err := http.NewRequest("POST", "https://api.twitter.com/oauth2/token", strings.NewReader("grant_type=client_credentials"))
 	if err != nil {
-		panic(err)
+		return oauth2.Token{}, err
 	}
 
 	req.SetBasicAuth(keys.Key, keys.Secret)
@@ -72,7 +75,7 @@ func getToken(keys AccessKeys) oauth2.Token {
 	var client http.Client
 	res, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return oauth2.Token{}, err
 	}
 	defer res.Body.Close()
 
@@ -80,8 +83,8 @@ func getToken(keys AccessKeys) oauth2.Token {
 	dec := json.NewDecoder(res.Body)
 	dec.Decode(&token)
 	if err != nil {
-		panic(err)
+		return oauth2.Token{}, err
 	}
 
-	return token
+	return token, nil
 }
