@@ -11,7 +11,7 @@ type Retweet struct {
 func (api TWApi) GetRetweets(id string) ([]Retweet, error) {
 	var ret []Retweet
 	route := "statuses/retweets/"
-	url := baseUrl + route + id + ".json"
+	url := baseUrl + route + id + ".json?count=100"
 	err := api.getRequest(url, &ret)
 	if err != nil {
 		return nil, err
