@@ -50,17 +50,19 @@ func main() {
 
 	uniqueUsers := merge(usernames, existingUsernames)
 
-	err = writeUsersFile(usersFile, uniqueUsers)
+	err = writeUsers(usersFile, uniqueUsers)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func writeUsersFile(usersFile string, users []string) error {
+func writeUsers(usersFile string, users []string) error {
 	f, err := os.OpenFile(usersFile, os.O_RDWR|os.O_CREATE, 0755)
 	if err != nil {
 		return err
 	}
+
+	defer f.Close()
 
 	w := csv.NewWriter(f)
 	for _, user := range users {
