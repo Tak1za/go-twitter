@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"math/rand"
@@ -41,30 +42,34 @@ func main() {
 	}
 
 	tClient := twc.GetTwitterClient(accessKeys)
-	retweets, err := tClient.GetRetweets(tweetID)
-	if err != nil {
-		panic(err)
+	if tweetID != "" {
+		retweets, err := tClient.GetRetweets(tweetID)
+		if err != nil {
+			panic(err)
+		}
+
+		usernames := make([]string, 0, len(retweets))
+		for _, retweet := range retweets {
+			usernames = append(usernames, retweet.User.ScreenName)
+		}
+
+		existingUsernames := existing(usersFile)
+
+		uniqueUsers := merge(usernames, existingUsernames)
+
+		err = writeUsers(usersFile, uniqueUsers)
+		if err != nil {
+			panic(err)
+		}
+
+		if numWinners == 0 {
+			return
+		}
+
+		fmt.Println("The winners are: ", pickWinners(usersFile, numWinners))
+	} else {
+		panic(errors.New("Please enter a tweet ID using the -tweet flag"))
 	}
-
-	usernames := make([]string, 0, len(retweets))
-	for _, retweet := range retweets {
-		usernames = append(usernames, retweet.User.ScreenName)
-	}
-
-	existingUsernames := existing(usersFile)
-
-	uniqueUsers := merge(usernames, existingUsernames)
-
-	err = writeUsers(usersFile, uniqueUsers)
-	if err != nil {
-		panic(err)
-	}
-
-	if numWinners == 0 {
-		return
-	}
-
-	fmt.Println("The winners are: ", pickWinners(usersFile, numWinners))
 }
 
 func pickWinners(usersFile string, num int) []string {
