@@ -3,11 +3,20 @@ package twc
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
 	"golang.org/x/oauth2"
 )
+
+const (
+	baseUrl = "https://api.twitter.com/1.1/"
+)
+
+type TWApi struct {
+	HttpClient *http.Client
+}
 
 //AccessKeys datatype
 type AccessKeys struct {
@@ -16,11 +25,39 @@ type AccessKeys struct {
 }
 
 //GetTwitterClient to start making requests
-func GetTwitterClient(keys AccessKeys) *http.Client {
+func GetTwitterClient(keys AccessKeys) *TWApi {
 	accessToken := getToken(keys)
 	var conf oauth2.Config
 	tClient := conf.Client(context.Background(), &accessToken)
-	return tClient
+	return &TWApi{
+		HttpClient: tClient,
+	}
+}
+
+func (api TWApi) getRequest(url string, data interface{}) error {
+	res, err := api.HttpClient.Get(url)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	err = decodeResponse(res.Body, data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func decodeResponse(item io.ReadCloser, data interface{}) error {
+	dec := json.NewDecoder(item)
+	err := dec.Decode(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getToken(keys AccessKeys) oauth2.Token {

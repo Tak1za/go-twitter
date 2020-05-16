@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/Tak1za/go-twitter/twc"
@@ -23,13 +22,17 @@ func main() {
 	}
 
 	tClient := twc.GetTwitterClient(accessKeys)
-	res2, err := tClient.Get(fmt.Sprintf("https://api.twitter.com/1.1/statuses/retweets/%s.json", "1162771373426540545"))
+	res, err := tClient.GetRetweets("1261544718133071874")
 	if err != nil {
 		panic(err)
 	}
-	defer res2.Body.Close()
 
-	io.Copy(os.Stdout, res2.Body)
+	var usernames []string
+	for _, retweet := range res {
+		usernames = append(usernames, retweet.User.ScreenName)
+	}
+
+	fmt.Println(usernames)
 }
 
 func getKeysFromJson() keys {
