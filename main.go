@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Tak1za/twc"
+	"github.com/Tak1za/go-twitter/twc"
 )
 
 type keys struct {
